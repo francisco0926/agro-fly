@@ -15,7 +15,7 @@ import zipfile
 
 
 # 1. CONFIGURACIÓN INICIAL
-st.set_page_config(page_title="AgroFly Pro", layout="wide", page_icon="🛸")
+st.set_page_config(page_title="AgroFly Pro", layout="wide", page_icon="🌾")
 
 # --- FUNCIONES DE APOYO ---
 def convertir_a_segundos(tiempo_str):
