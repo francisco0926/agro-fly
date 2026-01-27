@@ -127,7 +127,32 @@ def main():
         # Generamos el archivo ZIP en memoria
         zip_preparado = generar_zip_reportes(df)
 
+
+        # --- LÓGICA DE CONTROL DE TAMAÑO ---
+        # Calculamos el tamaño en Megabytes
+        # len(zip_preparado) nos da los bytes totales
+        tamano_mb = len(zip_preparado) / (1024 * 1024)
+        limite_maximo = 10  # Límite de 10 MB
+
         st.markdown("---")
+
+
+        if tamano_mb <= limite_maximo:
+            st.success(f"✅ Reportes procesados ({tamano_mb:.2f} MB). Ya podés descargar el paquete de informes.")
+            
+            # BOTÓN DE DESCARGA (Solo aparece si es menor al límite)
+            st.download_button(
+                label="📥 Descargar todos los Reportes (ZIP)",
+                data=zip_preparado,
+                file_name="Reportes_AgroReport.zip",
+                mime="application/zip"
+            )
+        else:
+            # MENSAJE DE ERROR si es muy pesado
+            st.error(f"⚠️ El archivo generado es demasiado grande ({tamano_mb:.2f} MB).")
+            st.warning(f"El límite permitido es de {limite_maximo} MB. Intentá procesar un Excel con menos filas.")
+
+        
         st.success("✅ Reportes procesados. Ya podés descargar el paquete de informes.")
         
         # BOTÓN DE DESCARGA
