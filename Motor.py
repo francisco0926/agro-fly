@@ -15,7 +15,7 @@ import zipfile
 
 
 # 1. CONFIGURACIÓN INICIAL
-st.set_page_config(page_title="AgroFly Pro", layout="centered", page_icon="🌾")
+st.set_page_config(page_title="AgroReport Pro", layout="centered", page_icon="🌾")
 
 # --- FUNCIONES DE APOYO ---
 def convertir_a_segundos(tiempo_str):
@@ -113,7 +113,7 @@ def generar_zip_reportes(df_subido):
 
 # --- APP PRINCIPAL ---  pdf_bytes = pdf.output(dest='S')
 def main():
-    st.title("🌾 AgroFly: Procesador de Operaciones")
+    st.title("🌾 AgroReport: Procesador de Operaciones")
     st.markdown("Subí el log de tu drone y generá los informes automáticos.")
 
     uploaded_file = st.file_uploader("Elegí el archivo del drone (.xlsx)", type=['xlsx'])
@@ -134,7 +134,7 @@ def main():
         st.download_button(
             label="📥 Descargar todos los Reportes (ZIP)",
             data=zip_preparado,
-            file_name="Reportes_AgroFly.zip",
+            file_name="Reportes_AgroReport.zip",
             mime="application/zip"
         )
 
