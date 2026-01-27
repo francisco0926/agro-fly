@@ -113,8 +113,7 @@ def generar_zip_reportes(df_subido):
 
 # --- APP PRINCIPAL ---  pdf_bytes = pdf.output(dest='S')
 def main():
-    st.title("🌾 AgroReport: 
-    Procesador de Operaciones")
+    st.title("🌾 AgroReport: Procesador de Operaciones")
     st.markdown("Subí el log de tu drone y generá los informes automáticos.")
 
     uploaded_file = st.file_uploader("Elegí el archivo del drone (.xlsx)", type=['xlsx'])
