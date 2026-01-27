@@ -1,33 +1,18 @@
-from os import mkdir
-from pyexpat import model
-import pandas as pd
-import time as time
-from pandas import ExcelWriter
-import threading
-import random
-import matplotlib.pyplot as plt
+
 import openpyxl
 import numpy as np
-import tensorflow_datasets as tfds
-np.set_printoptions(precision=3, suppress=True)
-import tensorflow as tf
-from keras import layers
-import tensorflowjs
-from keras.models import load_model
-import math
-import random
-import numpy
-from random import *
-from colorama import Fore, init
-import datetime
-#########################################################################################################
 import pandas as pd
 from fpdf import FPDF
 import os
 import streamlit as st
-
 import io
 import zipfile
+
+
+
+
+
+
 
 # 1. CONFIGURACIÓN INICIAL
 st.set_page_config(page_title="AgroFly Pro", layout="wide", page_icon="🛸")
