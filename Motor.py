@@ -38,7 +38,8 @@ class PDF_Decorado(FPDF):
         self.line(x, y, x + 10, y + 10)
         self.line(x + 10, y, x, y + 10)
         self.set_fill_color(0, 102, 204)
-        self.circle(x+3.5, y+3.5, 3, 'F')
+        self.ellipse(x + 0.5, y + 0.5, 6, 6, 'F')
+        #self.circle(x+3.5, y+3.5, 3, 'F')
 
     def header(self):
         self.set_fill_color(0, 51, 102)
