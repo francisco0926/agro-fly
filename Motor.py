@@ -147,7 +147,7 @@ def main():
     st.sidebar.header("Personalización del PDF")
     
     # Creamos el input. El nombre por defecto es "AGROFLY"
-    nombre_empresa = st.sidebar.text_input("Nombre de la Empresa", value="AGROFLY")
+    nombre_empresa = st.sidebar.text_input("Nombre de la Empresa", value="AGRO REPORT")
     
     # Guardamos el nombre en la sesión
     st.session_state['nombre_empresa'] = nombre_empresa.upper() # Lo pasamos a mayúsculas
