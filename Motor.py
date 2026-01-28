@@ -28,13 +28,27 @@ def formatear_tiempo(segundos_totales):
 # --- CLASE PDF ---
 class PDF_Decorado(FPDF):
     def dibujar_logo_drone(self, x, y):
-        self.set_draw_color(0, 102, 204)
-        self.set_line_width(0.5)
-        self.line(x, y, x + 10, y + 10)
-        self.line(x + 10, y, x, y + 10)
-        self.set_fill_color(0, 102, 204)
-        self.ellipse(x + 0.5, y + 0.5, 6, 6, 'F')
-        #self.circle(x+3.5, y+3.5, 3, 'F')
+        # Color dorado/trigo para la espiga
+        self.set_draw_color(255, 215, 0) # Dorado
+        self.set_fill_color(255, 215, 0)
+        self.set_line_width(0.6)
+
+        # 1. Tallo central (una línea inclinada como la espiga 🌾)
+        self.line(x + 5, y + 15, x + 5, y + 2) 
+
+        # 2. Granos de la espiga (pequeñas elipses a los costados)
+        # Lado izquierdo
+        self.ellipse(x + 2, y + 4, 3, 2, 'F')
+        self.ellipse(x + 1, y + 8, 3, 2, 'F')
+        self.ellipse(x + 2, y + 12, 3, 2, 'F')
+    
+        # Lado derecho
+        self.ellipse(x + 6, y + 6, 3, 2, 'F')
+        self.ellipse(x + 7, y + 10, 3, 2, 'F')
+        self.ellipse(x + 6, y + 14, 3, 2, 'F')
+
+        # 3. Un pequeño círculo en la punta
+        self.ellipse(x + 4, y, 2.5, 3.5, 'F')
 
 
     def header(self):
