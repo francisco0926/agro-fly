@@ -96,7 +96,7 @@ def procesar_datos_informe(df_subido):
 # --- GENERADOR DE ZIP FILTRADO ---
 def generar_zip_seleccionado(informe_filtrado):
     # Obtenemos el nombre de la sesión, si no existe usamos "AGROFLY"
-    nombre_personalizado = st.session_state.get('nombre_empresa', 'AGROFLY')
+    nombre_personalizado = st.session_state.get('nombre_empresa', 'AGRO REPORT')
     buffer_zip = io.BytesIO()
     with zipfile.ZipFile(buffer_zip, "w") as zf:
         for i, fila in informe_filtrado.iterrows():
