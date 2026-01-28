@@ -29,7 +29,7 @@ def formatear_tiempo(segundos_totales):
 class PDF_Decorado(FPDF):
     def dibujar_logo_drone(self, x, y):
         try:
-            self.image('logo.jpg', x=x, y=y, w=20) 
+            self.image('SSS(13).jpg', x=x, y=y, w=20) 
         except:
             # Por si te olvidás de subir la imagen, que no se rompa la app
             self.set_text_color(255, 255, 255)
