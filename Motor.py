@@ -7,12 +7,7 @@ import os
 import streamlit as st
 import io
 import zipfile
-
-
-
-
-
-
+import math
 
 # 1. CONFIGURACIÓN INICIAL
 st.set_page_config(page_title="AgroReport Pro", layout="centered", page_icon="🌾")
@@ -39,7 +34,6 @@ class PDF_Decorado(FPDF):
         self.line(x + 10, y, x, y + 10)
         self.set_fill_color(0, 102, 204)
         self.ellipse(x + 0.5, y + 0.5, 6, 6, 'F')
-        #self.circle(x+3.5, y+3.5, 3, 'F')
 
     def header(self):
         self.set_fill_color(0, 51, 102)
@@ -47,7 +41,6 @@ class PDF_Decorado(FPDF):
         self.dibujar_logo_drone(170, 12)
         self.set_text_color(255, 255, 255)
         self.set_font('Arial', 'B', 20)
-        # Usar 190 en lugar de 0 para asegurar que el texto respete el margen derecho
         self.cell(190, 15, '  AGROFLY', 0, 1, 'L') 
         self.ln(20)
 
@@ -57,9 +50,8 @@ class PDF_Decorado(FPDF):
         self.set_text_color(128, 128, 128)
         self.cell(0, 10, f'Página {self.page_no()}', 0, 0, 'C')
 
-# --- GENERADOR DE ZIP CON PDFs ---
-def generar_zip_reportes(df_subido):
-    # Procesamiento de datos
+# --- PROCESADOR DE DATOS ---
+def procesar_datos_informe(df_subido):
     df = df_subido.copy()
     df.columns = df.columns.astype(str).str.strip()
     df['fecha_simple'] = df['Flight time'].astype(str).str[:10]
@@ -77,95 +69,97 @@ def generar_zip_reportes(df_subido):
         return ha / 10 if (mins > 0 and 1 < (ha/mins) < 10) else ha
     
     informe['Area Final'] = informe.apply(corregir, axis=1)
+    # Creamos una etiqueta amigable para el usuario
+    informe['etiqueta'] = informe['fecha_simple'] + " | " + informe['Location']
+    return informe
 
-    # Creamos un archivo ZIP en memoria (RAM)
+# --- GENERADOR DE ZIP FILTRADO ---
+def generar_zip_seleccionado(informe_filtrado):
     buffer_zip = io.BytesIO()
     with zipfile.ZipFile(buffer_zip, "w") as zf:
-        for i, fila in informe.iterrows():
+        for i, fila in informe_filtrado.iterrows():
             pdf = PDF_Decorado()
-            pdf.set_margins(10, 10, 10) # Izquierda, Arriba, Derecha (10mm cada uno)
+            pdf.set_margins(10, 10, 10)
             pdf.add_page()
             
             pdf.set_text_color(0, 51, 102)
             pdf.set_font('Arial', 'B', 14)
-            #pdf.cell(0, 10, f"ORDEN DE TRABAJO: {fila['fecha_simple']}", "B", 1, 'L')                   ###
             pdf.cell(190, 10, f"ORDEN DE TRABAJO: {fila['fecha_simple']}", "B", 1, 'L')
             pdf.ln(10)
 
-            def agregar_fila_dato(label, valor, unidad=""):
-                # 1. Calculamos cuántos renglones va a ocupar el texto de la derecha
-                # El ancho es 130mm. fpdf tiene una función para medir el ancho del texto:
+            def agregar_fila_dato(pdf_obj, label, valor, unidad=""):
                 texto_completo = f" {valor} {unidad}"
-                ancho_texto = pdf.get_string_width(texto_completo)
-    
-                # Calculamos cuántas líneas ocupa (aproximado)
-                import math
-                lineas = math.ceil(ancho_texto / 125) # 125 para dejar margen interno
+                ancho_texto = pdf_obj.get_string_width(texto_completo)
+                lineas = math.ceil(ancho_texto / 125)
                 if lineas < 1: lineas = 1
-    
-                # La altura total será 12mm por cada línea
                 altura_total = lineas * 12
+                y_actual = pdf_obj.get_y()
 
-                # Guardamos posición actual
-                x_actual = pdf.get_x()
-                y_actual = pdf.get_y()
+                pdf_obj.set_fill_color(240, 245, 255)
+                pdf_obj.set_font('Arial', 'B', 11)
+                pdf_obj.cell(60, altura_total, f" {label}", 1, 0, 'L', fill=True) 
 
-                # 2. Dibujamos la celda de la IZQUIERDA (Etiqueta)
-                pdf.set_fill_color(240, 245, 255)
-                pdf.set_font('Arial', 'B', 11)
-                # Aquí está el truco: le pasamos la 'altura_total' calculada
-                pdf.cell(60, altura_total, f" {label}", 1, 0, 'L', fill=True) 
+                pdf_obj.set_font('Arial', '', 11)
+                pdf_obj.multi_cell(130, 12, texto_completo, 1, 'L')
+                pdf_obj.set_y(y_actual + altura_total)
 
-                # 3. Dibujamos la celda de la DERECHA (Valor) usando multi_cell
-                pdf.set_font('Arial', '', 11)
-                pdf.multi_cell(130, 12, texto_completo, 1, 'L')
+            agregar_fila_dato(pdf, "UBICACIÓN", fila['Location'])
+            agregar_fila_dato(pdf, "SUPERFICIE TOTAL", f"{fila['Area Final']:.2f}", "Hectáreas")
+            agregar_fila_dato(pdf, "INSUMO APLICADO", f"{fila['insumo_num']:.2f}", "L/Kg")
+            agregar_fila_dato(pdf, "TIEMPO DE OPERACIÓN", formatear_tiempo(fila['segundos_vuelo']))
+            agregar_fila_dato(pdf, "CANTIDAD DE VUELOS", int(fila['Flight time']))
 
-                # 4. Forzamos al cursor a ir debajo de la celda más alta para la siguiente fila
-                pdf.set_y(y_actual + altura_total)
-
-            agregar_fila_dato("UBICACIÓN", fila['Location'])
-            agregar_fila_dato("SUPERFICIE TOTAL", f"{fila['Area Final']:.2f}", "Hectáreas")
-            agregar_fila_dato("INSUMO APLICADO", f"{fila['insumo_num']:.2f}", "L/Kg")
-            agregar_fila_dato("TIEMPO DE OPERACIÓN", formatear_tiempo(fila['segundos_vuelo']))
-            agregar_fila_dato("CANTIDAD DE VUELOS", int(fila['Flight time']))
-
-            # Generamos el PDF como bytes
             pdf_bytes = pdf.output(dest='S').encode('latin-1')
-            
-            # Lo metemos dentro del ZIP
-            nombre_pdf = f"Reporte_{fila['fecha_simple']}_{i}.pdf"
+            # Nombre del archivo basado en fecha y ubicación abreviada
+            loc_abreviada = str(fila['Location'])[:10].replace(" ", "_")
+            nombre_pdf = f"Reporte_{fila['fecha_simple']}_{loc_abreviada}.pdf"
             zf.writestr(nombre_pdf, pdf_bytes)
 
     buffer_zip.seek(0)
-    return buffer_zip # Retornamos el ZIP completo
+    return buffer_zip.getvalue()
 
-# --- APP PRINCIPAL ---  pdf_bytes = pdf.output(dest='S')
+# --- APP PRINCIPAL ---
 def main():
     st.title("🌾 AgroReport: Procesador de Operaciones")
-    st.markdown("Subí el log de tu drone y generá los informes automáticos.")
+    st.markdown("Subí el log de tu drone y elegí qué reportes descargar.")
 
     uploaded_file = st.file_uploader("Elegí el archivo del drone (.xlsx)", type=['xlsx'])
 
     if uploaded_file is not None:
         df = pd.read_excel(uploaded_file)
+        informe = procesar_datos_informe(df)
         
-        st.subheader("📊 Vista Previa de Datos")
-        st.dataframe(df.head(), use_container_width=True)
+        st.subheader("📊 Reportes Detectados")
+        st.write("Seleccioná los lotes que querés procesar:")
 
-        # Generamos el archivo ZIP en memoria
-        zip_preparado = generar_zip_reportes(df)
-
-
-        st.markdown("---")
-        st.success("✅ Reportes procesados. Ya podés descargar el paquete de informes.")
-        
-        # BOTÓN DE DESCARGA
-        st.download_button(
-            label="📥 Descargar todos los Reportes (ZIP)",
-            data=zip_preparado,
-            file_name="Reportes_AgroReport.zip",
-            mime="application/zip"
+        # 1. El usuario elige los reportes
+        seleccion = st.multiselect(
+            "Reportes disponibles:",
+            options=informe['etiqueta'].tolist(),
+            default=informe['etiqueta'].tolist(),
+            help="Hacé clic para quitar o agregar reportes al paquete ZIP"
         )
+
+        if seleccion:
+            # Filtramos el dataframe de informe según la selección
+            informe_final = informe[informe['etiqueta'].isin(seleccion)]
+            
+            st.info(f"Seleccionaste {len(informe_final)} reporte(s).")
+
+            # 2. Generamos el ZIP solo con lo seleccionado
+            if st.button("🚀 Preparar Archivos para Descarga"):
+                with st.spinner("Generando PDFs..."):
+                    zip_data = generar_zip_seleccionado(informe_final)
+                    
+                    st.success("✅ ¡Paquete listo!")
+                    st.download_button(
+                        label="📥 Descargar Reportes Seleccionados (ZIP)",
+                        data=zip_data,
+                        file_name="Reportes_AgroFly_Seleccion.zip",
+                        mime="application/zip"
+                    )
+        else:
+            st.warning("⚠️ Seleccioná al menos un reporte de la lista de arriba.")
 
 if __name__ == "__main__":
     main()
