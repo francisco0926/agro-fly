@@ -103,7 +103,7 @@ def generar_zip_reportes(df_subido):
             agregar_fila_dato("CANTIDAD DE VUELOS", int(fila['Flight time']))
 
             # Generamos el PDF como bytes
-            pdf_bytes = pdf.output(dest='S')
+            pdf_bytes = pdf.output(dest='S').encode('latin-1')
             
             # Lo metemos dentro del ZIP
             nombre_pdf = f"Reporte_{fila['fecha_simple']}_{i}.pdf"
