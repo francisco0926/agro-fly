@@ -28,13 +28,16 @@ def formatear_tiempo(segundos_totales):
 # --- CLASE PDF ---
 class PDF_Decorado(FPDF):
     def dibujar_logo_drone(self, x, y):
-        try:
-            self.image('SSS(13).jpg', x=x, y=y, w=20) 
-        except:
-            # Por si te olvidás de subir la imagen, que no se rompa la app
-            self.set_text_color(255, 255, 255)
-            self.set_font('Arial', 'B', 8)
-            self.text(x, y, "LOGO AQUÍ")
+        # Configuramos una fuente que soporte símbolos (Arial suele funcionar en FPDF2 para emojis básicos)
+        self.set_font('Arial', 'B', 24) 
+        self.set_text_color(255, 255, 255) # Color blanco para que resalte sobre el azul
+    
+        # Nos posicionamos en las coordenadas x, y
+        self.set_xy(x, y)
+    
+        # Escribimos el emoji como si fuera un texto
+        # Nota: Si el PDF te tira error de "latin-1", probamos con una letra o icono similar
+        self.cell(20, 20, "🌾", 0, 0, 'C')
 
     def header(self):
         self.set_fill_color(0, 51, 102)
