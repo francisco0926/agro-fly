@@ -41,7 +41,7 @@ class PDF_Decorado(FPDF):
         self.dibujar_logo_drone(170, 12)
         self.set_text_color(255, 255, 255)
         self.set_font('Arial', 'B', 20)
-        self.cell(190, 15, '  AGROFLY', 0, 1, 'L') 
+        self.cell(190, 15, '  AGRO REPORT', 0, 1, 'L') 
         self.ln(20)
 
     def footer(self):
