@@ -27,6 +27,9 @@ def formatear_tiempo(segundos_totales):
 
 # --- CLASE PDF ---
 class PDF_Decorado(FPDF):
+    def __init__(self, nombre_empresa="AGRO REPORT"):
+        super().__init__()
+        self.nombre_empresa = nombre_empresa # Guardamos el nombre aquí
     def dibujar_logo_drone(self, x, y):
         # Color dorado/trigo para la espiga
         self.set_draw_color(255, 215, 0) # Dorado
@@ -57,7 +60,8 @@ class PDF_Decorado(FPDF):
         self.dibujar_logo_drone(170, 12)
         self.set_text_color(255, 255, 255)
         self.set_font('Arial', 'B', 20)
-        self.cell(190, 15, '  AGRO REPORT', 0, 1, 'L') 
+        #self.cell(190, 15, '  AGRO REPORT', 0, 1, 'L') 
+        self.cell(190, 15, f'  {self.nombre_empresa}', 0, 1, 'L')
         self.ln(20)
 
     def footer(self):
@@ -91,10 +95,12 @@ def procesar_datos_informe(df_subido):
 
 # --- GENERADOR DE ZIP FILTRADO ---
 def generar_zip_seleccionado(informe_filtrado):
+    # Obtenemos el nombre de la sesión, si no existe usamos "AGROFLY"
+    nombre_personalizado = st.session_state.get('nombre_empresa', 'AGROFLY')
     buffer_zip = io.BytesIO()
     with zipfile.ZipFile(buffer_zip, "w") as zf:
         for i, fila in informe_filtrado.iterrows():
-            pdf = PDF_Decorado()
+            pdf = PDF_Decorado(nombre_empresa=nombre_personalizado)
             pdf.set_margins(10, 10, 10)
             pdf.add_page()
             
@@ -137,6 +143,16 @@ def generar_zip_seleccionado(informe_filtrado):
 # --- APP PRINCIPAL ---
 def main():
     st.title("🌾 AgroReport: Procesador de Operaciones")
+    # --- BARRA LATERAL DE PERSONALIZACIÓN ---
+    st.sidebar.header("Personalización del PDF")
+    
+    # Creamos el input. El nombre por defecto es "AGROFLY"
+    nombre_empresa = st.sidebar.text_input("Nombre de la Empresa", value="AGROFLY")
+    
+    # Guardamos el nombre en la sesión
+    st.session_state['nombre_empresa'] = nombre_empresa.upper() # Lo pasamos a mayúsculas
+
+    
     st.markdown("Subí el log de tu drone y elegí qué reportes descargar.")
 
     uploaded_file = st.file_uploader("Elegí el archivo del drone (.xlsx)", type=['xlsx'])
