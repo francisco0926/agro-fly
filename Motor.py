@@ -47,7 +47,8 @@ class PDF_Decorado(FPDF):
         self.dibujar_logo_drone(170, 12)
         self.set_text_color(255, 255, 255)
         self.set_font('Arial', 'B', 20)
-        self.cell(0, 15, 'AGROFLY', 0, 1, 'L')
+        # Usar 190 en lugar de 0 para asegurar que el texto respete el margen derecho
+        self.cell(190, 15, '  AGROFLY', 0, 1, 'L') 
         self.ln(20)
 
     def footer(self):
@@ -86,15 +87,19 @@ def generar_zip_reportes(df_subido):
             
             pdf.set_text_color(0, 51, 102)
             pdf.set_font('Arial', 'B', 14)
-            pdf.cell(0, 10, f"ORDEN DE TRABAJO: {fila['fecha_simple']}", "B", 1, 'L')
+            #pdf.cell(0, 10, f"ORDEN DE TRABAJO: {fila['fecha_simple']}", "B", 1, 'L')                   ###
+            pdf.cell(190, 10, f"ORDEN DE TRABAJO: {fila['fecha_simple']}", "B", 1, 'L')
             pdf.ln(10)
 
             def agregar_fila_dato(label, valor, unidad=""):
                 pdf.set_fill_color(240, 245, 255)
                 pdf.set_font('Arial', 'B', 11)
-                pdf.cell(60, 12, f" {label}", 1, 0, 'L', fill=True)
+                # Celda del nombre (Ancho 60)
+                pdf.cell(60, 12, f" {label}", 1, 0, 'L', fill=True) 
+                
                 pdf.set_font('Arial', '', 11)
-                pdf.cell(0, 12, f" {valor} {unidad}", 1, 1, 'L')
+                # Celda del valor (Ancho 130 para completar los 190mm del margen)
+                pdf.cell(130, 12, f" {valor} {unidad}", 1, 1, 'L')
 
             agregar_fila_dato("UBICACIÓN", fila['Location'])
             agregar_fila_dato("SUPERFICIE TOTAL", f"{fila['Area Final']:.2f}", "Hectáreas")
