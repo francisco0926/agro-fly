@@ -83,6 +83,7 @@ def generar_zip_reportes(df_subido):
     with zipfile.ZipFile(buffer_zip, "w") as zf:
         for i, fila in informe.iterrows():
             pdf = PDF_Decorado()
+            pdf.set_margins(10, 10, 10) # Izquierda, Arriba, Derecha (10mm cada uno)
             pdf.add_page()
             
             pdf.set_text_color(0, 51, 102)
@@ -92,14 +93,25 @@ def generar_zip_reportes(df_subido):
             pdf.ln(10)
 
             def agregar_fila_dato(label, valor, unidad=""):
+                # Guardamos la posición X e Y antes de empezar la fila
+                x_inicial = pdf.get_x()
+                y_inicial = pdf.get_y()
+
+                # 1. Celda del Título (Etiqueta)
                 pdf.set_fill_color(240, 245, 255)
                 pdf.set_font('Arial', 'B', 11)
-                # Celda del nombre (Ancho 60)
                 pdf.cell(60, 12, f" {label}", 1, 0, 'L', fill=True) 
-                
+
+                # 2. Celda del Valor (Usamos multi_cell para que no se pase del margen)
                 pdf.set_font('Arial', '', 11)
-                # Celda del valor (Ancho 130 para completar los 190mm del margen)
-                pdf.cell(130, 12, f" {valor} {unidad}", 1, 1, 'L')
+                # El ancho es 130 para que sumado a los 60 del label no pase de 190mm
+                pdf.multi_cell(130, 12, f" {valor} {unidad}", 1, 'L')
+
+                # Ajuste por si el texto fue muy largo y ocupó 2 renglones
+                # Esto asegura que la siguiente fila empiece debajo de la más alta
+                y_final = pdf.get_y()
+                if y_final < y_inicial + 12:
+                    pdf.set_y(y_inicial + 12)
 
             agregar_fila_dato("UBICACIÓN", fila['Location'])
             agregar_fila_dato("SUPERFICIE TOTAL", f"{fila['Area Final']:.2f}", "Hectáreas")
