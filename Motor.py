@@ -32,8 +32,8 @@ class PDF_Decorado(FPDF):
         self.nombre_empresa = nombre_empresa # Guardamos el nombre aquí
     def dibujar_logo_drone(self, x, y):
         # Color dorado/trigo para la espiga
-        self.set_draw_color(255, 215, 0) # Dorado
-        self.set_fill_color(255, 215, 0)
+        self.set_draw_color(0, 125, 255) # Dorado
+        self.set_fill_color(0, 125, 255)
         self.set_line_width(0.6)
 
         # 1. Tallo central (una línea inclinada como la espiga 🌾)
