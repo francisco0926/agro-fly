@@ -28,12 +28,13 @@ def formatear_tiempo(segundos_totales):
 # --- CLASE PDF ---
 class PDF_Decorado(FPDF):
     def dibujar_logo_drone(self, x, y):
-        self.set_draw_color(0, 102, 204)
-        self.set_line_width(0.5)
-        self.line(x, y, x + 10, y + 10)
-        self.line(x + 10, y, x, y + 10)
-        self.set_fill_color(0, 102, 204)
-        self.ellipse(x + 0.5, y + 0.5, 6, 6, 'F')
+        try:
+            self.image('logo.jpg', x=x, y=y, w=20) 
+        except:
+            # Por si te olvidás de subir la imagen, que no se rompa la app
+            self.set_text_color(255, 255, 255)
+            self.set_font('Arial', 'B', 8)
+            self.text(x, y, "LOGO AQUÍ")
 
     def header(self):
         self.set_fill_color(0, 51, 102)
