@@ -1,4 +1,3 @@
-
 import openpyxl
 import numpy as np
 import pandas as pd
@@ -8,6 +7,7 @@ import streamlit as st
 import io
 import zipfile
 import math
+import streamlit_analytics2 as streamlit_analytics # Importamos la librería
 
 # 1. CONFIGURACIÓN INICIAL
 st.set_page_config(page_title="AgroReport Pro", layout="centered", page_icon="🌾")
@@ -29,30 +29,20 @@ def formatear_tiempo(segundos_totales):
 class PDF_Decorado(FPDF):
     def __init__(self, nombre_empresa="AGRO REPORT"):
         super().__init__()
-        self.nombre_empresa = nombre_empresa # Guardamos el nombre aquí
+        self.nombre_empresa = nombre_empresa 
+        
     def dibujar_logo_drone(self, x, y):
-        # Color dorado/trigo para la espiga
-        self.set_draw_color(0, 125, 255) # Dorado
+        self.set_draw_color(0, 125, 255) 
         self.set_fill_color(0, 125, 255)
         self.set_line_width(0.6)
-
-        # 1. Tallo central (una línea inclinada como la espiga 🌾)
         self.line(x + 5, y + 15, x + 5, y + 2) 
-
-        # 2. Granos de la espiga (pequeñas elipses a los costados)
-        # Lado izquierdo
         self.ellipse(x + 2, y + 4, 3, 2, 'F')
         self.ellipse(x + 1, y + 8, 3, 2, 'F')
         self.ellipse(x + 2, y + 12, 3, 2, 'F')
-    
-        # Lado derecho
         self.ellipse(x + 6, y + 6, 3, 2, 'F')
         self.ellipse(x + 7, y + 10, 3, 2, 'F')
         self.ellipse(x + 6, y + 14, 3, 2, 'F')
-
-        # 3. Un pequeño círculo en la punta
         self.ellipse(x + 4, y, 2.5, 3.5, 'F')
-
 
     def header(self):
         self.set_fill_color(0, 51, 102)
@@ -60,7 +50,6 @@ class PDF_Decorado(FPDF):
         self.dibujar_logo_drone(170, 12)
         self.set_text_color(255, 255, 255)
         self.set_font('Arial', 'B', 20)
-        #self.cell(190, 15, '  AGRO REPORT', 0, 1, 'L') 
         self.cell(190, 15, f'  {self.nombre_empresa}', 0, 1, 'L')
         self.ln(20)
 
@@ -89,13 +78,11 @@ def procesar_datos_informe(df_subido):
         return ha / 10 if (mins > 0 and 1 < (ha/mins) < 10) else ha
     
     informe['Area Final'] = informe.apply(corregir, axis=1)
-    # Creamos una etiqueta amigable para el usuario
     informe['etiqueta'] = informe['fecha_simple'] + " | " + informe['Location']
     return informe
 
 # --- GENERADOR DE ZIP FILTRADO ---
 def generar_zip_seleccionado(informe_filtrado):
-    # Obtenemos el nombre de la sesión, si no existe usamos "AGROFLY"
     nombre_personalizado = st.session_state.get('nombre_empresa', 'AGRO REPORT')
     buffer_zip = io.BytesIO()
     with zipfile.ZipFile(buffer_zip, "w") as zf:
@@ -116,11 +103,9 @@ def generar_zip_seleccionado(informe_filtrado):
                 if lineas < 1: lineas = 1
                 altura_total = lineas * 12
                 y_actual = pdf_obj.get_y()
-
                 pdf_obj.set_fill_color(240, 245, 255)
                 pdf_obj.set_font('Arial', 'B', 11)
                 pdf_obj.cell(60, altura_total, f" {label}", 1, 0, 'L', fill=True) 
-
                 pdf_obj.set_font('Arial', '', 11)
                 pdf_obj.multi_cell(130, 12, texto_completo, 1, 'L')
                 pdf_obj.set_y(y_actual + altura_total)
@@ -132,7 +117,6 @@ def generar_zip_seleccionado(informe_filtrado):
             agregar_fila_dato(pdf, "CANTIDAD DE VUELOS", int(fila['Flight time']))
 
             pdf_bytes = pdf.output(dest='S').encode('latin-1')
-            # Nombre del archivo basado en fecha y ubicación abreviada
             loc_abreviada = str(fila['Location'])[:10].replace(" ", "_")
             nombre_pdf = f"Reporte_{fila['fecha_simple']}_{loc_abreviada}.pdf"
             zf.writestr(nombre_pdf, pdf_bytes)
@@ -142,56 +126,46 @@ def generar_zip_seleccionado(informe_filtrado):
 
 # --- APP PRINCIPAL ---
 def main():
-    st.title("🌾 AgroReport: Procesador de Operaciones")
-    # --- BARRA LATERAL DE PERSONALIZACIÓN ---
-    st.sidebar.header("Personalización del PDF")
-    
-    # Creamos el input. El nombre por defecto es "AGROFLY"
-    nombre_empresa = st.sidebar.text_input("Nombre de la Empresa", value="AGRO REPORT")
-    
-    # Guardamos el nombre en la sesión
-    st.session_state['nombre_empresa'] = nombre_empresa.upper() # Lo pasamos a mayúsculas
-
-    
-    st.markdown("Subí el log de tu drone y elegí qué reportes descargar.")
-
-    uploaded_file = st.file_uploader("Elegí el archivo del drone (.xlsx)", type=['xlsx'])
-
-    if uploaded_file is not None:
-        df = pd.read_excel(uploaded_file)
-        informe = procesar_datos_informe(df)
+    # Envolvemos todo en el track de analytics
+    with streamlit_analytics.track():
+        st.title("🌾 AgroReport: Procesador de Operaciones")
         
-        st.subheader("📊 Reportes Detectados")
-        st.write("Seleccioná los lotes que querés procesar:")
+        # BARRA LATERAL
+        st.sidebar.header("Personalización del PDF")
+        nombre_empresa = st.sidebar.text_input("Nombre de la Empresa", value="AGRO REPORT")
+        st.session_state['nombre_empresa'] = nombre_empresa.upper()
 
-        # 1. El usuario elige los reportes
-        seleccion = st.multiselect(
-            "Reportes disponibles:",
-            options=informe['etiqueta'].tolist(),
-            default=informe['etiqueta'].tolist(),
-            help="Hacé clic para quitar o agregar reportes al paquete ZIP"
-        )
+        st.markdown("Subí el log de tu drone y elegí qué reportes descargar.")
 
-        if seleccion:
-            # Filtramos el dataframe de informe según la selección
-            informe_final = informe[informe['etiqueta'].isin(seleccion)]
+        uploaded_file = st.file_uploader("Elegí el archivo del drone (.xlsx)", type=['xlsx'])
+
+        if uploaded_file is not None:
+            df = pd.read_excel(uploaded_file)
+            informe = procesar_datos_informe(df)
             
-            st.info(f"Seleccionaste {len(informe_final)} reporte(s).")
+            st.subheader("📊 Reportes Detectados")
+            seleccion = st.multiselect(
+                "Reportes disponibles:",
+                options=informe['etiqueta'].tolist(),
+                default=informe['etiqueta'].tolist()
+            )
 
-            # 2. Generamos el ZIP solo con lo seleccionado
-            if st.button("🚀 Preparar Archivos para Descarga"):
-                with st.spinner("Generando PDFs..."):
-                    zip_data = generar_zip_seleccionado(informe_final)
-                    
-                    st.success("✅ ¡Paquete listo!")
-                    st.download_button(
-                        label="📥 Descargar Reportes Seleccionados (ZIP)",
-                        data=zip_data,
-                        file_name="Reportes_AgroFly_Seleccion.zip",
-                        mime="application/zip"
-                    )
-        else:
-            st.warning("⚠️ Seleccioná al menos un reporte de la lista de arriba.")
+            if seleccion:
+                informe_final = informe[informe['etiqueta'].isin(seleccion)]
+                st.info(f"Seleccionaste {len(informe_final)} reporte(s).")
+
+                if st.button("🚀 Preparar Archivos para Descarga"):
+                    with st.spinner("Generando PDFs..."):
+                        zip_data = generar_zip_seleccionado(informe_final)
+                        st.success("✅ ¡Paquete listo!")
+                        st.download_button(
+                            label="📥 Descargar Reportes Seleccionados (ZIP)",
+                            data=zip_data,
+                            file_name="Reportes_AgroFly_Seleccion.zip",
+                            mime="application/zip"
+                        )
+            else:
+                st.warning("⚠️ Seleccioná al menos un reporte.")
 
 if __name__ == "__main__":
     main()
