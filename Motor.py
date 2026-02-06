@@ -116,7 +116,7 @@ def generar_zip_seleccionado(informe_filtrado):
             agregar_fila_dato(pdf, "TIEMPO DE OPERACIÓN", formatear_tiempo(fila['segundos_vuelo']))
             agregar_fila_dato(pdf, "CANTIDAD DE VUELOS", int(fila['Flight time']))
 
-            pdf_bytes = pdf.output(dest='S').encode('latin-1')
+            pdf_bytes = pdf.output()
             loc_abreviada = str(fila['Location'])[:10].replace(" ", "_")
             nombre_pdf = f"Reporte_{fila['fecha_simple']}_{loc_abreviada}.pdf"
             zf.writestr(nombre_pdf, pdf_bytes)
